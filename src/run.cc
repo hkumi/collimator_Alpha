@@ -15,7 +15,7 @@ MyRunAction::MyRunAction()
     man->FinishNtuple(0);
 
 
-    man->CreateH2("xy1 ","xy1", 100, -0.2, 0.2, 100, -0.2, 0.2);
+    man->CreateH2("xy1 ","xy1", 100, -0.1, 0.1, 100, -0.1, 0.1);
     
 
     man->CreateH2("a1 ","angle vs energy_1", 100, 0, 100, 100, 0, 2);
