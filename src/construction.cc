@@ -87,7 +87,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
 
 
 
-  Hole = new G4Tubs("BoxHole", 0.0*mm, 1*mm, 2.5*mm, 0*deg, 360*deg);
+  Hole = new G4Tubs("BoxHole", 0.0*mm, 0.5*mm, 2.5*mm, 0*deg, 360*deg);
 
   Hole_LV = new G4LogicalVolume(Hole,                     //its shape
                               Vacc,                      //its material
@@ -126,7 +126,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
                                       "fLScore_1");
 
   auto fPScore_r_1 = new G4PVPlacement(0,
-                                    G4ThreeVector(0.*mm,0.*mm,500*mm),
+                                    G4ThreeVector(0.*mm,0.*mm,404*mm),
                                     fLScore_1,
                                     "fPScore_r_1",
                                     fLBox,
