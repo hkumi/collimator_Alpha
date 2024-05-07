@@ -17,5 +17,12 @@
 /gps/pos/sigma_x 0.5 mm
 /gps/pos/sigma_y 0.5 mm
 
+/gps/ang/mintheta 0 deg
+/gps/ang/maxtheta 1 deg
+/gps/ang/minphi 0 deg
+/gps/ang/maxphi 360 deg
+
+
+
 /run/printProgress 100
 /run/beamOn 100000000
