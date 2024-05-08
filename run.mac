@@ -18,7 +18,7 @@
 #/gps/pos/sigma_x 2.5 mm
 #/gps/pos/sigma_y 2.5 mm
 /gps/ang/type iso
-/gps/ang/mintheta 178 deg
+/gps/ang/mintheta 179 deg
 /gps/ang/maxtheta 180 deg
 /gps/ang/minphi 0 deg
 /gps/ang/maxphi 360 deg
