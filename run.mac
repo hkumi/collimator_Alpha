@@ -7,22 +7,22 @@
 
 /gps/particle alpha
 /gps/energy 5 MeV
-#/gps/position 0. 0. -19. mm
+
 /gps/direction 0. 0. 1.
-/gps/pos/type Beam
+/gps/pos/type Plane
+/gps/pos/shape Square
 /gps/pos/centre 0. 0. 0. mm
-/gps/pos/halfx 2.5 mm
-/gps/pos/halfy 2.5 mm
+#/gps/pos/halfx 2.5 mm
+#/gps/pos/halfy 2.5 mm
 
-/gps/pos/sigma_x 0.5 mm
-/gps/pos/sigma_y 0.5 mm
-
-/gps/ang/mintheta 0 deg
-/gps/ang/maxtheta 1 deg
+#/gps/pos/sigma_x 2.5 mm
+#/gps/pos/sigma_y 2.5 mm
+/gps/ang/type iso
+/gps/ang/mintheta 170 deg
+/gps/ang/maxtheta 180 deg
 /gps/ang/minphi 0 deg
 /gps/ang/maxphi 360 deg
 
 
-
 /run/printProgress 100
-/run/beamOn 100000000
+/run/beamOn 1000000000
