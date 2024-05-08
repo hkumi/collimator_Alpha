@@ -9,7 +9,7 @@
 #/vis/scene/add/axes
 /vis/viewer/zoom 0.5
 /vis/scene/add/eventID
-/vis/scene/endOfEventAction accumulate 1000000000
+/vis/scene/endOfEventAction accumulate 100000000000
 #/gun/particle neutron
-/vis/ogl/set/displayListLimit 1000000000
+/vis/ogl/set/displayListLimit 100000000000
 #/run/beamOn 1000000
