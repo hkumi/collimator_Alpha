@@ -44,7 +44,7 @@ This simulation models:
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/hkumi/collimator_Alpha.git
 cd collimator_Alpha
 
 # Create build directory
