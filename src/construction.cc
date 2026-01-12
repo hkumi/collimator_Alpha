@@ -5,156 +5,143 @@
 #include "G4VPrimitiveScorer.hh"
 #include "G4SDManager.hh"
 #include "G4VSensitiveDetector.hh"
-#include "CLHEP/Units/SystemOfUnits.h"
 #include <algorithm>
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 DetectorConstruction::DetectorConstruction()
 {
-
     DefineMaterials();
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 DetectorConstruction::~DetectorConstruction()
 { }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void DetectorConstruction::DefineMaterials()
 {
-
-  G4NistManager *nist = G4NistManager::Instance();
-  G4int ncomponents, natoms;
-  G4double massfraction;
-
-  G4double Vdens = 1.e-25*g/cm3;
-  G4double Vpres = 1.e-19*pascal;
-  G4double Vtemp = 0.1*kelvin;
-
-  G4double a, z;
-  C = nist->FindOrBuildElement("C");
-  N  = new G4Element("Nitrogen","N",7.,14.007*g/mole);
-  O  = new G4Element("Oxygen","O",8.,15.999*g/mole);
-  F  = new G4Element("Fluorine","F",9.,18.998*g/mole);
-
-  
-  // vacuum
-  Vacc = new G4Material("Galactic", z=1, a=1.01*g/mole, Vdens, kStateGas, Vtemp, Vpres);
-
-  //Copper
-  mat_copper = nist->FindOrBuildMaterial("G4_Cu");
-  
-  //silicon
-  elSi = nist->FindOrBuildMaterial("G4_Si");
-;
-  
-//....................End of scintillator material........................................
-
-
-
-
+    G4NistManager *nist = G4NistManager::Instance();
+    
+    // Vacuum for world and holes
+    worldMat = nist->FindOrBuildMaterial("G4_Galactic");
+    
+    // Collimator material (Brass or Copper)
+    collimatorMat = nist->FindOrBuildMaterial("G4_Cu");  // Copper
+    
+    // Detector material (Silicon)
+    detectorMat = nist->FindOrBuildMaterial("G4_Si");
 }
 
 G4VPhysicalVolume *DetectorConstruction::Construct()
 {
-  // The world
-  fBoxSize = 150*cm;
-
-
-  sBox = new G4Box("world",                             //its name
-                   fBoxSize/2,fBoxSize/2,fBoxSize/2);   //its dimensions
-
-  fLBox = new G4LogicalVolume(sBox,                     //its shape
-                             Vacc,                      //its material
-                             "World");                  //its name
-
-  fPBox = new G4PVPlacement(0,                          //no rotation
-                            G4ThreeVector(),            //at (0,0,0)
-                            fLBox,                      //its logical volume
-                            "World",                    //its name
-                            0,                          //its mother  volume
-                            false,                      //no boolean operation
-                            0);                         //copy number
-
-
-  //The Borated polythylene_block1 with pinhole
-
-  BoratedSize = 50*mm;
-  Borated_thickness = 5*mm;
-  Borated_Box1 = new G4Box("Borated1",                             //its name
-                   BoratedSize/2,  BoratedSize/2,Borated_thickness/2);   //its dimensions
-
-
-
-  Hole = new G4Tubs("BoxHole", 0.0*mm, 0.5*mm, 2.5*mm, 0*deg, 360*deg);
-
-  Hole_LV = new G4LogicalVolume(Hole,                     //its shape
-                              Vacc,                      //its material
-                             "H1");                  //its name
-
-   Borated_LV1 = new G4LogicalVolume(Borated_Box1,                     //its shape
-                              mat_copper,                      //its material
-                             "Borated1", 0,0,0);                  //its name
-
-
-
-  Borated_PV1 = new G4PVPlacement(0,                          //no rotation
-                            G4ThreeVector(0*mm,0*mm,400*mm),            //at (0,0,0)
-                             Borated_LV1,                      //its logical volume
-                            "Borated1",                    //its name
-                            fLBox,                          //its mother  volume
-                            false,                      //no boolean operation
-                            0,true);                         //copy number
-
-  Hole_PV = new G4PVPlacement(0,                          //no rotation
-                            G4ThreeVector(0*mm,0*mm,0*mm),            //at (0,0,0)
-                             Hole_LV,                      //its logical volume
-                            "H1",                    //its name
-                            Borated_LV1,                          //its mother  volume
-                            false,                      //no boolean operation
-                            0,true);                         //copy number
-
-
-  G4double ScThick_1 =  3.0*mm;
-
-  auto sScore_1 = new G4Box("sScore_1",
-                            70/2*mm,70/2*mm,ScThick_1/2);
-
-  auto fLScore_1 = new G4LogicalVolume(sScore_1,
-                                        elSi,
-                                      "fLScore_1");
-
-  auto fPScore_r_1 = new G4PVPlacement(0,
-                                    G4ThreeVector(0.*mm,0.*mm,404*mm),
-                                    fLScore_1,
-                                    "fPScore_r_1",
-                                    fLBox,
-                                    false,
-                                    0,true);
-  
-
-  fScoringVolume_1 = fLScore_1;
-
-
-
-
-  return fPBox;
+    // World volume
+    fBoxSize = 500*mm;
+    
+    auto solidWorld = new G4Box("World", 
+                                fBoxSize/2, 
+                                fBoxSize/2, 
+                                fBoxSize/2);
+    
+    auto logicWorld = new G4LogicalVolume(solidWorld, 
+                                          worldMat, 
+                                          "World");
+    
+    auto physWorld = new G4PVPlacement(0, 
+                                       G4ThreeVector(), 
+                                       logicWorld, 
+                                       "World", 
+                                       0, 
+                                       false, 
+                                       0, 
+                                       true);
+    
+    // === COLLIMATOR ===
+    // Main collimator block (5 mm thick brass/copper)
+    G4double collimatorThickness = 5*mm;
+    G4double collimatorSizeXY = 50*mm;
+    
+    auto solidCollimator = new G4Box("Collimator",
+                                     collimatorSizeXY/2,
+                                     collimatorSizeXY/2,
+                                     collimatorThickness/2);
+    
+    auto logicCollimator = new G4LogicalVolume(solidCollimator,
+                                               collimatorMat,
+                                               "Collimator");
+    
+    // Position collimator at z = 0
+    auto physCollimator = new G4PVPlacement(0,
+                                            G4ThreeVector(0, 0, 0),
+                                            logicCollimator,
+                                            "Collimator",
+                                            logicWorld,
+                                            false,
+                                            0,
+                                            true);
+    
+    // === 1mm HOLE IN COLLIMATOR ===
+    G4double holeRadius = 0.5*mm;  // 1mm diameter
+    G4double holeLength = collimatorThickness;  // EXACTLY the collimator thickness
+    
+    auto solidHole = new G4Tubs("Hole",
+                                0,
+                                holeRadius,
+                                holeLength/2,  // Half-length
+                                0,
+                                360*deg);
+    
+    auto logicHole = new G4LogicalVolume(solidHole,
+                                         worldMat,
+                                         "Hole");
+    
+    // Place hole at center of collimator
+    auto physHole = new G4PVPlacement(0,
+                                      G4ThreeVector(0, 0, 0),
+                                      logicHole,
+                                      "Hole",
+                                      logicCollimator,
+                                      false,
+                                      0,
+                                      true);
+    
+    // === DETECTOR (Silicon) ===
+    G4double detectorThickness = 1*mm;
+    G4double detectorSizeXY = 100*mm;
+    
+    auto solidDetector = new G4Box("Detector",
+                                   detectorSizeXY/2,
+                                   detectorSizeXY/2,
+                                   detectorThickness/2);
+    
+    auto logicDetector = new G4LogicalVolume(solidDetector,
+                                             detectorMat,
+                                             "Detector");
+    
+    // Position detector RIGHT AFTER collimator (zero distance)
+    // Collimator front is at z = collimatorThickness/2 = 2.5mm
+    // Detector front should be at z = collimatorThickness/2 = 2.5mm
+    // Detector center should be at z = collimatorThickness/2 + detectorThickness/2
+    G4double detectorPosZ = collimatorThickness/2 + detectorThickness/2;
+    
+    auto physDetector = new G4PVPlacement(0,
+                                          G4ThreeVector(0, 0, detectorPosZ),
+                                          logicDetector,
+                                          "Detector",
+                                          logicWorld,
+                                          false,
+                                          0,
+                                          true);
+    
+    fScoringVolume = logicDetector;
+    
+    return physWorld;
 }
-
-//...ooooooooooooooooo..................................oooooooooooooooooooo......
-
-
 
 void DetectorConstruction::ConstructSDandField()
 {
- // sensitive detectors -----------------------------------------------------
-  G4SDManager* SDman = G4SDManager::GetSDMpointer();
-  SDman->SetVerboseLevel(0);
-
-  //Define Multi-Detector and Register
-  //--------------------------------------------------------------------------------------------
-  G4MultiFunctionalDetector* det = new G4MultiFunctionalDetector("IonPro");
-  SDman->AddNewDetector(det);
-//  fLScore->SetSensitiveDetector(det);
+    G4SDManager* SDman = G4SDManager::GetSDMpointer();
+    
+    // MultiFunctionalDetector for scoring
+    G4MultiFunctionalDetector* det = new G4MultiFunctionalDetector("DetectorMFD");
+    SDman->AddNewDetector(det);
+    
+    // Set detector as sensitive
+    fScoringVolume->SetSensitiveDetector(det);
 }

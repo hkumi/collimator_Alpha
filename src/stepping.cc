@@ -1,4 +1,13 @@
 #include "stepping.hh"
+#include "construction.hh"
+#include "event.hh"
+#include "G4Step.hh"
+#include "G4Event.hh"
+#include "G4RunManager.hh"
+#include "G4LogicalVolume.hh"
+#include "G4SystemOfUnits.hh"
+#include "G4UnitsTable.hh"
+#include "G4AnalysisManager.hh"
 
 MySteppingAction::MySteppingAction(MyEventAction *eventAction)
 {
@@ -10,66 +19,58 @@ MySteppingAction::~MySteppingAction()
 
 void MySteppingAction::UserSteppingAction(const G4Step *step)
 {
-  if (step->GetTrack()->GetDefinition()->GetParticleName() == "alpha" ) {
-     G4AnalysisManager *man = G4AnalysisManager::Instance();
-
-     const DetectorConstruction *detectorConstruction = static_cast<const DetectorConstruction*> (G4RunManager::GetRunManager()->GetUserDetectorConstruction());
-     G4LogicalVolume *volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
-
-     G4LogicalVolume *fScoringVolume_1 = detectorConstruction->GetScoringVolume();
-     
-
-     
-     G4Track* track = step->GetTrack();
-     G4double TrackID = step->GetTrack()->GetTrackID();
-     //track->SetTrackStatus(fStopAndKill);
-     G4int stepNumber = track->GetCurrentStepNumber();
-     //G4cout << "the track material:" << TrackID << G4endl; 
-
-
-     G4double edep = step->GetTotalEnergyDeposit();
-     G4double edep1 = step->GetTotalEnergyDeposit();
-     
-
-     // If it's the first step in the volume, save the position.
-     G4ThreeVector posPhoton; 
-     G4StepPoint *preStepPoint; 
-     G4StepPoint *postStepPoint ;   
-     G4double ekin_1 ; 
-
-     if (volume != fScoringVolume_1) return;
-        fEventAction->AddEdep(edep);
-        if (step->IsFirstStepInVolume() ){
-           preStepPoint = step->GetPreStepPoint();
-           postStepPoint = step->GetPostStepPoint();
-           G4double ekin_1  = postStepPoint->GetKineticEnergy()/MeV; 
-           G4ThreeVector p0_1 = postStepPoint->GetMomentumDirection();
-           G4double angle_1 = std::acos(p0_1.z());
-           G4ThreeVector posPhoton1 = postStepPoint->GetPosition()/cm;
-
-           man->FillH2(0, posPhoton1[0], posPhoton1[1]);
-           man->FillH2(1, angle_1/deg, ekin_1);
-
-           man->FillH1(0, ekin_1);
-          
-           man->FillNtupleDColumn(0, 0, ekin_1);
-           man->AddNtupleRow(0);
-
- 
-           }
-           
-        
-     
-     
-     
-     
-
+    // Check if particle is alpha
+    if (step->GetTrack()->GetDefinition()->GetParticleName() != "alpha") {
+        return;
+    }
     
-
-  }
-  //else
-  //{
-    //step->GetTrack()->SetTrackStatus(fStopAndKill);
-  //}
-
+    // Get detector construction
+    const DetectorConstruction* detectorConstruction = 
+        static_cast<const DetectorConstruction*>(
+            G4RunManager::GetRunManager()->GetUserDetectorConstruction());
+    
+    // Get current volume
+    G4LogicalVolume* volume = step->GetPreStepPoint()
+        ->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+    
+    // Check if we're in the detector
+    if (volume != detectorConstruction->GetScoringVolume()) {
+        return;
+    }
+    
+    // Get analysis manager
+    G4AnalysisManager* man = G4AnalysisManager::Instance();
+    
+    // If this is the first step in the detector
+    if (step->IsFirstStepInVolume()) {
+        G4StepPoint* postStepPoint = step->GetPostStepPoint();
+        
+        // Get position on detector (in mm)
+        G4ThreeVector position = postStepPoint->GetPosition();
+        G4double x = position.x() / mm;
+        G4double y = position.y() / mm;
+        
+        // Get energy at detector
+        G4double energy = postStepPoint->GetKineticEnergy() / MeV;
+        
+        // Get angle (relative to z-axis)
+        G4ThreeVector momentumDir = postStepPoint->GetMomentumDirection();
+        G4double angle = std::acos(momentumDir.z()) / deg;
+        
+        // Fill histograms
+        man->FillH2(0, x, y);           // Position distribution
+        man->FillH2(1, angle, energy);  // Angle vs Energy
+        man->FillH1(0, energy);         // Energy spectrum
+        man->FillH1(1, angle);          // Angular distribution
+        
+        // Fill ntuple
+        man->FillNtupleDColumn(0, 0, x);
+        man->FillNtupleDColumn(0, 1, y);
+        man->FillNtupleDColumn(0, 2, energy);
+        man->FillNtupleDColumn(0, 3, angle);
+        man->AddNtupleRow(0);
+        
+        // Optional: kill track after detection
+        step->GetTrack()->SetTrackStatus(fStopAndKill);
+    }
 }
